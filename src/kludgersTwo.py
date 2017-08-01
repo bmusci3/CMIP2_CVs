@@ -14,8 +14,6 @@ UNIT CONVERSIONS CAN ALSO BE CARRIED OUT THROUGH THIS FILE USING THE CONVERSIONS
 
 import os
 homeDir = os.getenv('HOME')
-print homeDir
-print os.path.join(homeDir,'git/CMIP2_CVs/src')
 os.chdir(os.path.join(homeDir,'git/CMIP2_CVs/src'))
 
 def kludgers(var, d, axis_ids, alias ):    
