@@ -76,7 +76,7 @@ for exp in ['AMIP']: #'con','per'
     variables.sort()
     #variables = ['/oldCMIPs/PJG_StorageRetrieval/CMIP6-STORAGE/mo/tas']
     
-    for Vcount,i in enumerate(variables[114:135]): #84 = tas, #41 = pr, 113 = tos
+    for Vcount,i in enumerate(variables[121:135]): #84 = tas, #41 = pr, 113 = tos
         varb = variables[variables.index(i)].split('/')[5]
         print Vcount, varb
         if varb in MissingVariables:
@@ -232,7 +232,7 @@ for exp in ['AMIP']: #'con','per'
                      QualCon[var][alias]= ['error time_bnds have gaps between them-setAutoBounds did not work. data gaps is 1981, netcdf file for that year is missing']
                      print 'Time bounds have gaps between them'
                      continue
-                 elif alias in ['derf-98a'] and var in ['ta']:
+                 elif alias in ['derf-98a'] and var in ['ta','ua']:
                      QualCon[var][alias]=['Error: axis longitude has bounds values spanning more than 360 degrees']
                      print 'Error: axis longitude has bounds values spanning more than 360 degrees'
                      continue
@@ -304,7 +304,7 @@ for exp in ['AMIP']: #'con','per'
                  
                  if time.getBounds() == None:
                      cdm.setAutoBounds('on')
-                     print 'time bounds could not be found, set auto bounds on'
+                     print 'Time bounds could not be found, set AutoBounds on'
                      BoundsIssue = 'Had to set AutoBounds = ON, b/c time bounds could not be found'                    
                  print time
                  
@@ -371,9 +371,10 @@ for exp in ['AMIP']: #'con','per'
                      #print axis_ids
                  print 'Axis id set'   
         
-                 #%% DECLAR PER VARIABLE CASES --- KLUDGERS - should replace with function when gets too long
+                 #%% DECLARE PER VARIABLE CASES --- KLUDGERS 
                  print ' '
                  print 'PERFOMRING KLUDGERS'
+                 
                  returns = kludgers(var, d, axis_ids, alias )
                  uniMsg = returns[0]
                  d.units = returns[1]
@@ -387,54 +388,56 @@ for exp in ['AMIP']: #'con','per'
                  #%% OUTPUT CMOR
                  print ' '
                  print 'OUTPUTING CMOR FILE'
+                 
                  if len(d.shape) > 3:
                      d = d.swapaxes(1,3).swapaxes(1,2)
                  values  = np.array(d[:],np.float32)
-                 cmor.set_deflate(varid,1,1,1) ; # shuffle=1,deflate=1,deflate_level=1 ; CMOR 3.0.6+
+                 cmor.set_deflate(varid,1,1,1); 
                  PreCmor = d[0,] #take first slice of preCMor data
+                 # Take Avg of data before it is manipulated/put through cmor
                  if len(d.shape) > 3:
                      #AVGD ACROSS ALL LEVELS
                      cdm.setAutoBounds('on') # CANT FIND BOUNDS WHEN USING 4D VARIABLE, SO SET AUTO BOUNDS TO SOLVE ISSUE
                      PreGblAvg = cdu.averager(cdu.averager(cdu.averager(PreCmor,axis=0,weights=None),axis=0,weights=None),axis = 0, weights=None) # take global average of pre-cmor data;
                      BoundsIssue = 'Had to set AutoBounds = ON'
-                     print 'AutoBounds ON'
-                     #cdm.setAutoBounds('off')
-                     #print 'truned aut bounds off and on' 
+                     print 'AutoBounds ON' 
                  else:
                      PreGblAvg = cdu.averager(cdu.averager(PreCmor,axis=0,weights=None),axis=0,weights=None) # take global average of pre-cmor data;
                      BoundsIssue = ''
                      print '3D variable, no levels'
           
                  #specify path where the cmor output was placed
-                 DUNNO = 'CMIP6'
+                 DUNNO = 'CMIP6' #this is needed to reliably reproduce the structure of the output path made by cmor_write
                  readin = os.path.join(outpath,DUNNO,activity_id,institution_id,source_id_,experiment_id,member_id,table_,variable_id,grid_label)+'/'
-                 tst = glob.glob(readin) # creates list of cmor output files found in the output path
+                 # creates list of cmor output files found in the output path
+                 tst = glob.glob(readin) 
                  #clean up old cmor outputs for each specific model and variable before writing newest output
-                 #tst0=tst[0]
                  try:
                      shutil.rmtree(tst[0]) ; # Remove existing data
                  except IndexError: #list 'tst' will be empty if there is nothing there so a index error will be raised
-                     print 'nothing to clean up'
+                     print 'Nothing to clean up'
                  
                  ## write out cmor output
                  cmor.write(varid,values,time_vals=time[:],time_bnds=time.getBounds())
-                 print 'cmor file created'
+                 print 'CMOR file created'
                  f.close()
                  cmor.close()
                  
                  
                  #%% REOPEN CMOR OUTPUT FILE AND PERFROM QC ON THE DATA
                  print ' '
-                 print 'REOPENING CMOR---QC'
+                 print 'QUALITY CONTROL STARTING ---REOPENING CMOR'
                  
+                 # use for plots with many aliases
                  marker = ['s','v','d','4',',', '+', '.', 'o', '*','h','^','8']
                  random.shuffle(marker)
                  
                  #specify path where the cmor output was placed
                  readin2 = os.path.join(outpath,DUNNO,activity_id,institution_id,source_id_,experiment_id,member_id,table_,variable_id,grid_label)+'/*/*'
-                 #readin2 = '/export/musci2/CMIP6/CMIP6/ISMIP6/PCMDI/PCMDI-test-1-0/piControl-withism/r11i1p1f1/Amon/'+var+'/gr/*/*' # path for aliases without a match
-                 tst2 = glob.glob(readin2) # creates list of cmor output files found in the output path
+                 # creates list of cmor output files found in the output path
+                 tst2 = glob.glob(readin2) 
                  tst20=tst2[0]
+                 # open new reprocessed CMOR file
                  fff = cdm.open(tst20,'r')
                  ddd=fff(var)
                  
@@ -451,10 +454,10 @@ for exp in ['AMIP']: #'con','per'
         
         ## SEASONAL ZONAL AVG         
                  # Set Spatial region of interest
-                 #region = cdu.region.domain(latitude=(30,65.))
                  #selectr data from that region only
                  regddd = fff(var,latitude = (30, 65))
-                 regddd = regddd[0:12] #takes first twleve slices in time of array
+                 #takes first twleve slices in time of array
+                 regddd = regddd[0:12] 
                  # obtain time series of reginally averaged variable
                  t = regddd.getTime()
                  c = t.asComponentTime()
@@ -463,18 +466,20 @@ for exp in ['AMIP']: #'con','per'
                  Months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                  for i in Months:
                      MonDic[i] = list()
+                 # match data indicies to the month of the year they are in
                  for k in xrange(len(t)):
-                     #if k < 360: #359< k < 720:
                      j = c[k].month
-                     MonDic[Months[j-1]].append(k)       
+                     MonDic[Months[j-1]].append(k)
+                 # perform avergaing depending on shape of data    
                  if len(d.shape) > 3:
                      #AVGD ACROSS ALL LEVELS
                      RegAvg = cdu.averager(cdu.averager(cdu.averager(regddd,axis=regddd.getAxisIds().index('lat'),weights=None),axis=regddd.getAxisIds().index('lon')-1,weights=None),axis = 1, weights=None)
-                     # take reg avg over lowest pressure level
+                     # REG AVG OVER LOWEST P LEVEL
                      regdddLowP = regddd[:,0,:,:]
                      SeasRegAvgLowP = cdu.averager(cdu.averager(regdddLowP,axis=regdddLowP.getAxisIds().index('lat'),weights=None),axis=regdddLowP.getAxisIds().index('lon')-1,weights=None)
                  else:
                      RegAvg = cdu.averager(cdu.averager(regddd,axis=regddd.getAxisIds().index('lat'),weights=None),axis=regddd.getAxisIds().index('lon')-1,weights=None)
+                 # collect bounds because missing data shows up as extremes
                  boundsSeas.append(max(RegAvg))
                  boundsSeas.append(min(RegAvg))
                  ## For SeasAvgs
@@ -490,22 +495,20 @@ for exp in ['AMIP']: #'con','per'
                  
         ## GLOBAL AVG        
                  # Generate first timestep value
-                 CmorData = ddd[0,] #take first time slice of array
-                 #cdutil.getAxisWeight()
+                 CmorData = ddd[0,]
                  ## THIS METHOD ONLY WORKS IF LON IS ALWAYS SECOND -- NEED TO MAKE MROE ROBUST -Take global avg of cmor output data
                  if len(d.shape) > 3:
                      #AVGD ACROSS ALL LEVELS
                      GblAvg = cdu.averager(cdu.averager(cdu.averager(CmorData,axis=CmorData.getAxisIds().index('lat'),weights=None),axis=CmorData.getAxisIds().index('lon')-1,weights=None), axis = 0, weights=None) ;
-                     #Obtain glbl avg of vertical profile
+                     #GBL AVG OF FOR VERTICAL PROFILE
                      VertGblAvg = cdu.averager(cdu.averager(CmorData,axis=CmorData.getAxisIds().index('lat'),weights=None),axis=CmorData.getAxisIds().index('lon')-1,weights=None)
                      plt.figure(6)
                      yVert = plt.plot(VertGblAvg.tolist(),levCmor[:].tolist(), marker='o', linestyle='--', label = alias )
                      plt.setp(yVert, linewidth =0.85)
-                    
-                 
                  else:
                      GblAvg = cdu.averager(cdu.averager(CmorData,axis=CmorData.getAxisIds().index('lat'),weights=None),axis=CmorData.getAxisIds().index('lon')-1,weights=None)
-                 # extra arguemetns for axis above are to ensure that the axis for lat and lon are being taken even when a variable with levels is included
+    
+                 # MAKE QUALITY CONTROL DICT whihc will be converted into json
                  QualCon[var][alias]={}
                  QualCon[var][alias]['PreCMOR'] = ['Global Avg: '+str(PreGblAvg)+' '+oldUnits,'Min: '+ str(PreCmor.min()),'Max: ' + str(PreCmor.max()),' LowestLev: '+str(levLow)+' '+levUni,'  '+BoundsIssue]
                  QualCon[var][alias]['CMOR']=["Global Avg: " + str(GblAvg)+' '+ddd.units+' '+uniMsg, 'Min: ' + str(CmorData.min()), 'Max: ' + str(CmorData.max()),' LowestLev: '+str(levCmorLow)+' '+levCmorUni,'  '+BoundsIssue] ## Add global average and min max to QC dictionary
@@ -518,42 +521,17 @@ for exp in ['AMIP']: #'con','per'
                      dzaLP=CmorData[0,]
                      dzaLowP = cdu.averager(dzaLP,axis=dzaLP.getAxisIds().index('lon'))
                  else:
+                     #plot data for the zonal avg at one time slice
                      dza = cdu.averager(CmorData,axis=CmorData.getAxisIds().index('lon')) # take zonal average of one time slice
-                
-                
-                
                  
-                
-                 modelmax = 27.0
-                 n = math.ceil(len(lst)/modelmax)
-                 if count <= modelmax:
-                     fignum = 1
-                 elif modelmax*2 >= count > modelmax:
-                     fignum = 2
-                 elif modelmax*3 >= count >modelmax*2:
-                     fignum = 3
-                 #plot data for the zonal avg at one time slice
-                 
-                 mpl.rc('figure',figsize=(10,20))
+                 # set figure size to very large to accomodate for AMIP variables with tons of aliases
+                 mpl.rc('figure',figsize=(15,9))
                  plt.figure(1)
-                 plt.figure(1,figsize=(10,20))
-                 plt.plot(latCmor[:].tolist(), dza.tolist(), label = alias)
-#                 if len(lst) < 30:
-#                     plt.plot(latCmor[:].tolist(), dza.tolist(), label = alias)
-#                 else:
-#                     plt.subplot(n,1,fignum)
-#                     plt.plot(latCmor[:].tolist(), dza.tolist(), label = alias)
-#                     pylab.legend(loc='center left', bbox_to_anchor=(0.95, 0.5))
-                     
+                 #plt.figure(1,figsize=(10,20))
+                 plt.plot(latCmor[:].tolist(), dza.tolist(), label = alias)                     
                  if len(d.shape) > 3:
                      plt.figure(8)
-                     plt.plot(latCmor[:].tolist(), dzaLowP.tolist(), label = alias)             
-        
-        
-        
-        
-        
-        
+                     plt.plot(latCmor[:].tolist(), dzaLowP.tolist(), label = alias)              
         
         ## DRIFT
                  if len(d.shape) > 3:
@@ -568,7 +546,7 @@ for exp in ['AMIP']: #'con','per'
                  y = plt.plot(timeCmor[:].tolist(), drift.tolist(), label = alias)
                  plt.setp(y, linewidth =0.85) # decrease linewidth
                  
-        ## FOR BAR CHARTS
+        ## BAR CHARTS
                  models.append(alias)
                  GlblAvgs.append(GblAvg)
                  if len(d.shape) > 3:
@@ -583,13 +561,15 @@ for exp in ['AMIP']: #'con','per'
         #%% PLOTTING 
         print ' '
         print 'CREATING PLOTS FOR QC'
+        
         mpl.rc('figure', figsize=(15,9))
         if skip == 'yes':
             print 'skipping variable b/c no xml'
             continue
+       
         # Creates the plot of zonal mean for one time slice 
         ZonalAvg = plt.figure(1)
-        plt.figure(1,figsize=(10,20))
+        #plt.figure(1,figsize=(10,20))
         plt.ylabel(str(var)+' ('+ddd.units+')')
         plt.xlabel('long degrees north')
         plt.title(str(var)+' Zonal Average of one time slice')
@@ -599,16 +579,16 @@ for exp in ['AMIP']: #'con','per'
         TimeDrift = plt.figure(2)
         plt.ylabel(str(var)+' ('+ddd.units+')')
         plt.xlabel('days since 1870-01-01')
-        print bounds
-        if max(bounds) > 1e17: #reomve missing data that shows up as a max
+        #print bounds
+        if max(bounds) > 1e17: #reomve missing data that shows up as a huge max
             remove = bounds.index(max(bounds))
             del bounds[remove]
-            print "bounds removed"
-            print bounds
-        elif min(bounds) < -1e17:#reomve missing data that shows up as a min
+            print "Bounds removed"
+            #print bounds
+        elif min(bounds) < -1e17:#reomve missing data that shows up as a huge min
             remove = bounds.index(min(bounds))
             del bounds[remove]
-            print "bounds removed"
+            print "Bounds removed"
         ymax = max(bounds)+0.02*max(bounds) # set the plot bounds
         ymin = min(bounds)-0.02*min(bounds) 
         plt.ylim([ymin,ymax])
@@ -638,8 +618,7 @@ for exp in ['AMIP']: #'con','per'
             plt.xlabel('Lowest Pressure Level')
             plt.title('Lowest Pressure level for each model')
         
-        ##Creates verticla profile of global average
-            print 'setting labels for vert plot'    
+        ##Creates verticla profile of global average   
             VertProfGblAvg = plt.figure(6)
             plt.gca().invert_yaxis()
             plt.ylabel('Pressure level in Pa??')
@@ -671,7 +650,8 @@ for exp in ['AMIP']: #'con','per'
         
         #%% FILE CREATION
         print ' '
-        print 'CREATING AND SAVING FILES' 
+        print 'CREATING AND SAVING FILES'
+        
         # creates sub direc in output location for placing Quality cntrol items
         subdir='QC'
         if not os.path.exists(outpath+'/'+subdir):
@@ -791,7 +771,3 @@ for exp in ['AMIP']: #'con','per'
 #      calendar: 360_day
 #      axis: T
 #   Python id:  0x7ff3c9675c90
-
-
-
-
