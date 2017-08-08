@@ -76,10 +76,10 @@ for exp in ['AMIP']: #'con','per'
     variables.sort()
     #variables = ['/oldCMIPs/PJG_StorageRetrieval/CMIP6-STORAGE/mo/tas']
 
-    for Vcount,i in enumerate(variables[121:135]): #84 = tas, #41 = pr, 113 = tos
+    for Vcount,i in enumerate(variables[41:45]): #84 = tas, #41 = pr, 113 = tos 17 = evs (need to test mrro 36)
         varb = variables[variables.index(i)].split('/')[5]
         print Vcount, varb
-        if varb in MissingVariables:
+        if varb in MissingVariables or varb in ['tos']: ## NOTE THE TOS!!!! ####
             print 'Skipping variable b/c no matching varb in AMON table'
             continue
 
@@ -228,14 +228,23 @@ for exp in ['AMIP']: #'con','per'
                  elif alias in ['ncar-98a'] and var in ['ps']:
                      QualCon[var][alias]= ['when the data is read in from the xml only the latitude data makes it through, leaving the data of the shape (64,). Although netcdf files look ok (only looked at two though)']
                      continue
-                 elif alias in ['ecpc-02a7'] and var in ['rlut']:
-                     QualCon[var][alias]= ['error time_bnds have gaps between them-setAutoBounds did not work. data gaps is 1981, netcdf file for that year is missing']
+                 elif alias in ['ecpc-02a7'] and var in ['rlut','huss']:
+                     QualCon[var][alias]= ['error time_bnds have gaps between them-setAutoBounds did not work. data gaps is 1981(rlut) or 1982(huss), netcdf file for that year is missing']
                      print 'Time bounds have gaps between them'
                      continue
-                 elif alias in ['derf-98a'] and var in ['ta','ua']:
+                 elif alias in ['derf-98a'] and var in ['ta','ua','va','wap','hur','hus']:
                      QualCon[var][alias]=['Error: axis longitude has bounds values spanning more than 360 degrees']
                      print 'Error: axis longitude has bounds values spanning more than 360 degrees'
                      continue
+                 elif alias in ['ukmo-98a'] and var in ['cl','cli','clw']:
+                     QualCon[var][alias]=['Udunits error becuase d.getLevel() returns none type. the level axis is labeled as da18/da19']
+                     print 'udunits error on levels'
+                     continue
+                 elif alias in ['lmd-95b'] and var in ['hus']:
+                     QualCon[var][alias]=['Error: You are defining variable (table Amon)  with 3 dimensions, when it should have 4 - d.shape only returns a 3D marix and cmor calls for 4D']
+                     print 'variable only has 3D when it needs 4D'
+                     continue
+                     
 
                  #%% ISOLATE the xml of interest
                  print ' '
@@ -352,9 +361,9 @@ for exp in ['AMIP']: #'con','per'
                                   'cell_bounds': lev.getBounds()})
                      print '!!!4D Variable!!!'
                      levUni = lev.units
-                     if lev.units in ['','lev']:
+                     if lev.units in ['','lev','level','unity']:
                          lev.units = 'Pa'
-                         levUni ="Had to force units to be Pa b/c they were blank or'lev' on input"
+                         levUni ="Had to force units to be Pa b/c they were blank or'lev/level/unity' on input"
                          axes[3]['units']='Pa'
                      levLow = lev[0]
                  else:
@@ -503,7 +512,7 @@ for exp in ['AMIP']: #'con','per'
                      #GBL AVG OF FOR VERTICAL PROFILE
                      VertGblAvg = cdu.averager(cdu.averager(CmorData,axis=CmorData.getAxisIds().index('lat'),weights=None),axis=CmorData.getAxisIds().index('lon')-1,weights=None)
                      plt.figure(6)
-                     yVert = plt.plot(VertGblAvg.tolist(),levCmor[:].tolist(), marker='o', linestyle='--', label = alias )
+                     yVert = plt.plot(VertGblAvg.tolist(),levCmor[:].tolist(), marker=marker[0], linestyle='--', label = alias )
                      plt.setp(yVert, linewidth =0.85)
                  else:
                      GblAvg = cdu.averager(cdu.averager(CmorData,axis=CmorData.getAxisIds().index('lat'),weights=None),axis=CmorData.getAxisIds().index('lon')-1,weights=None)
@@ -528,10 +537,10 @@ for exp in ['AMIP']: #'con','per'
                  mpl.rc('figure',figsize=(15,9))
                  plt.figure(1)
                  #plt.figure(1,figsize=(10,20))
-                 plt.plot(latCmor[:].tolist(), dza.tolist(), label = alias)
+                 plt.plot(latCmor[:].tolist(), dza.tolist(),marker=marker[0],markevery =7, label = alias)
                  if len(d.shape) > 3:
                      plt.figure(8)
-                     plt.plot(latCmor[:].tolist(), dzaLowP.tolist(), label = alias)
+                     plt.plot(latCmor[:].tolist(), dzaLowP.tolist(),marker=marker[0],markevery =7, label = alias)
 
         ## DRIFT
                  if len(d.shape) > 3:

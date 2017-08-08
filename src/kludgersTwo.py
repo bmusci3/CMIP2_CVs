@@ -16,16 +16,16 @@ import os
 homeDir = os.getenv('HOME')
 os.chdir(os.path.join(homeDir,'git/CMIP2_CVs/src'))
 
-def kludgers(var, d, axis_ids, alias ):    
+def kludgers(var, d, axis_ids, alias, table ):    
 
      import cmor, gc, json, sys, os, shutil
      import cdms2 as cdm
      import cdutil as cdu
      import numpy as np
      
-     Amon = json.load(open(os.path.join(homeDir,'git/CMIP2_CVs/Tables/CMIP6_Amon.json')))
-     DefaultUnits = Amon['variable_entry'][var]['units'].encode('ascii','ignore')
-     PostvDirec = Amon['variable_entry'][var]['positive']
+     JsonTable = json.load(open(os.path.join(homeDir,'git/CMIP2_CVs/Tables/',table)))
+     DefaultUnits = JsonTable['variable_entry'][var]['units'].encode('ascii','ignore')
+     PostvDirec = JsonTable['variable_entry'][var]['positive']
      
 #    
      Converter = 1
@@ -50,6 +50,7 @@ def kludgers(var, d, axis_ids, alias ):
      exceptions['hus']=[' ','  ','hPa','kg/kg\xdfB']
      exceptions['rsutcs']=[' ','  ','K','Watts/meter**2Hime','Watts/meter**2H','hPa','m/s']
      exceptions['clt']=[' ','  ']
+     exceptions['cl']=[' ','  ']
      exceptions['rsds']=[' ','  ','K','Watts/meter**2Hime','Watts/meter**2H','hPa','m/s']
      exceptions['rsus']=[' ','  ','K','Watts/meter**2Hime','Watts/meter**2H','hPa','m/s']
      exceptions['rltcrfm2']=[' ','  ','m/s']
@@ -105,9 +106,15 @@ def kludgers(var, d, axis_ids, alias ):
      exceptions['mrsos']=[' ','  ']
      exceptions['mrso']=[' ','  ']
      exceptions['mrro']=[' ','  ']
+     exceptions['mrfso']=[' ','  ']
+     exceptions['mrros']=[' ','  ']
+     exceptions['mrso']=[' ','  ']
+     exceptions['mrsos']=[' ','  ']
      exceptions['mpuua']=[' ','  ']
      exceptions['mptta']=[' ','  ']
      exceptions['clivi']=[' ','  ']
+     exceptions['evs']=[' ','  ']
+     conversions['evs'] = ['mm/day',1.0/86400]
 
 
      try:
@@ -116,7 +123,7 @@ def kludgers(var, d, axis_ids, alias ):
      except:
          oldUnits = 'Error Raised'
      
-     if var in ['tas','ts','ta']:
+     if var in ['tas','ts','ta','tos']:
          uniMsg = ' ' 
          if d.min() > 100.: # cccma-c01a tas min=192.5,max=313.9
              #print 'enter K'

@@ -15,7 +15,10 @@ import cmor, gc, json, sys, os, shutil
 import cdms2 as cdm
 import cdutil as cdu
 import numpy as np
+homeDir = os.getenv('HOME')
+os.chdir(os.path.join(homeDir,'git/CMIP2_CVs/src'))
 
+def Variable_Table_Matcher(pathin, tablepath)
 #specify where tables are located 
 tablepath = '/export/musci2/git/cmip6-cmor-tables/Tables/'
 
@@ -34,10 +37,10 @@ Errors = list()
 VarsAndTables = {}
 
 # open the monthly tales so that their variables can be compared to those in the directory being re-analysed
-Amon = json.load(open('/export/musci2/git/cmip6-cmor-tables/Tables/CMIP6_Amon.json'))
-Omon = json.load(open('/export/musci2/git/cmip6-cmor-tables/Tables/CMIP6_Omon.json'))
-SImon = json.load(open('/export/musci2/git/cmip6-cmor-tables/Tables/CMIP6_SImon.json'))
-Lmon = json.load(open('/export/musci2/git/cmip6-cmor-tables/Tables/CMIP6_Lmon.json'))
+Amon = json.load(open(os.path.join(tablepath,'CMIP6_Amon.json')))
+Omon = json.load(open(os.path.join(tablepath,'CMIP6_Omon.json')))
+SImon = json.load(open(os.path.join(tablepath,'CMIP6_SImon.json')))
+Lmon = json.load(open(os.path.join(tablepath,'CMIP6_Lmon.json')))
 
 Possible_Variables_Amon = Amon['variable_entry'].keys()
 Possible_Variables_Omon = Omon['variable_entry'].keys()
@@ -45,7 +48,6 @@ Possible_Variables_SImon = SImon['variable_entry'].keys()
 Possible_Variables_Lmon = Lmon['variable_entry'].keys()
 
 Provided_Variables = os.listdir(pathin)
-Provided_Variables_CMIP = os.listdir(pathinCMIP)
 
 
 for var in Provided_Variables:
