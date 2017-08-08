@@ -20,7 +20,7 @@ os.chdir(os.path.join(homeDir,'git/CMIP2_CVs/src'))
 
 def Variable_Table_Matcher(pathin, tablepath, dtype):
     #specify where tables are located 
-    tablepath = '/export/musci2/git/cmip6-cmor-tables/Tables/'
+    #tablepath = '/export/musci2/git/cmip6-cmor-tables/Tables/'
     
     #specify where the data to be re-analyzed is
     #AMIP Data
