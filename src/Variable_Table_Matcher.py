@@ -29,12 +29,16 @@ def Variable_Table_Matcher(pathin, tablepath, dtype):
 #    pathinCMIP = '/oldCMIPs/PJG_StorageRetrieval/CMIP6-STORAGE/mo/'
     
     #specify where output is saved
-    savepath = '/export/musci2/git/cmip6-cmor-tables/'
+    #savepath = '/export/musci2/git/cmip6-cmor-tables/'
     
     Matches = list()
     Missings = list()
     Errors = list()
     VarsAndTables = {}
+    ReMap = {}
+    
+    # ADD VARIABLES THAT HAVE BEEN RENAMED HERE
+    ReMap['sit'] = ['sithick']
     
     # open the monthly tales so that their variables can be compared to those in the directory being re-analysed
     Amon = json.load(open(os.path.join(tablepath,'CMIP6_Amon.json')))
@@ -48,9 +52,15 @@ def Variable_Table_Matcher(pathin, tablepath, dtype):
     Possible_Variables_Lmon = Lmon['variable_entry'].keys()
     
     Provided_Variables = os.listdir(pathin)
+    Provided_Variables.sort()
     
-    
-    for var in Provided_Variables:
+    for cnt,var in enumerate(Provided_Variables):
+        
+        if var in ReMap.keys():
+            Provided_Variables[cnt]=ReMap[var]
+            var = ReMap[var]           
+            
+        
         if var in Possible_Variables_Amon:
             print 'matched'
             Matches.append(var)
@@ -101,4 +111,4 @@ def Variable_Table_Matcher(pathin, tablepath, dtype):
     print >> f, j
     f.close()
     
-    return(VarsAndTables,Missings)
+    return(VarsAndTables,Missings,Provided_Variables)

@@ -39,9 +39,11 @@ import cmor, gc, json, sys, os, shutil, random, glob ; # math, difflib
 import cdms2 as cdm
 import cdutil as cdu ; # A required install
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt ; # A required install
 import matplotlib.pylab as pylab
-import matplotlib as mpl
+
 #os.chdir('/export/musci2/git/CMIP2_CVs/src')
 homeDir = os.getenv('HOME')
 user = os.getenv('USER')
@@ -86,8 +88,8 @@ for jh,path in enumerate(paths):
         outpath = os.path.join(homeDir,'Cmor_Testing/CmorData/'+exp) ; # Paul test
     
         #grab variables of interest
-        variables = glob.glob(pathin1+'*')
-        variables.sort()
+#        variables = glob.glob(pathin1+'*')
+#        variables.sort()
         #variables = ['/oldCMIPs/PJG_StorageRetrieval/CMIP6-STORAGE/mo/tas']
         
         #%%
@@ -98,9 +100,11 @@ for jh,path in enumerate(paths):
         matchers = Variable_Table_Matcher(pathin1, tablepath, dtype)
         varbDict = matchers[0]
         missingVars = matchers[1]
+        variables = matchers[2]
         #%%
-        for Vcount,gh in enumerate(variables): #84 = tas, #41 = pr, 113 = tos
-            varb = variables[variables.index(gh)].split('/')[5]
+        for Vcount,gh in enumerate(variables[48:130]): #84 = tas, #41 = pr, 113 = tos
+            varb = gh #variables[variables.index(gh)].split('/')[5]
+            var = varb
             print Vcount, varb
             TableID = varbDict[varb][0]
             
@@ -190,7 +194,7 @@ for jh,path in enumerate(paths):
             # create a user input file with that match
             # create dict that will house the user input files
             #create dictionary that will house user input json files
-                     var= os.path.basename(os.path.normpath(pathin)) # extracts variable name by taking it from the last part of the file path specified at the beginning of script
+                     #var= os.path.basename(os.path.normpath(pathin)) # extracts variable name by taking it from the last part of the file path specified at the beginning of script
                      common_user_input_dict['Conventions']='TBD' # required by CMIP6_CV.json
                      common_user_input_dict['calendar']='360_day' #set as 360_day to test, required by cmor
                      common_user_input_dict['_control_vocabulary_file']='CMIP6_CV.json'
@@ -271,6 +275,10 @@ for jh,path in enumerate(paths):
                      elif alias in ['lmd-95b'] and var in ['hus']:
                          QualCon[var][alias]=['Error: You are defining variable (table Amon)  with 3 dimensions, when it should have 4 - d.shape only returns a 3D marix and cmor calls for 4D']
                          print 'variable only has 3D when it needs 4D'
+                         continue
+                     elif alias in ['lmd-95a'] and var in ['mrso']:
+                         QualCon[var][alias]=['Error: axis longitude has bounds values spanning more than 360 degrees']
+                         print 'Error: axis longitude has bounds values spanning more than 360 degrees'
                          continue                     
     
                      #%% ISOLATE the xml of interest

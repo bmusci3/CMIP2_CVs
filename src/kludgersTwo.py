@@ -104,17 +104,16 @@ def kludgers(var, d, axis_ids, alias, table ):
      exceptions['prsn']=[' ','  ','m/s']
      exceptions['prec_ls']=[' ','  ']
      exceptions['mrsos']=[' ','  ']
-     exceptions['mrso']=[' ','  ']
+     exceptions['mrso']=[' ','  ','cm']
      exceptions['mrro']=[' ','  ']
      exceptions['mrfso']=[' ','  ']
      exceptions['mrros']=[' ','  ']
-     exceptions['mrso']=[' ','  ']
-     exceptions['mrsos']=[' ','  ']
      exceptions['mpuua']=[' ','  ']
      exceptions['mptta']=[' ','  ']
      exceptions['clivi']=[' ','  ']
      exceptions['evs']=[' ','  ']
      conversions['evs'] = ['mm/day',1.0/86400]
+     exceptions['sithick']=[' ','  ']
 
 
      try:
@@ -141,7 +140,7 @@ def kludgers(var, d, axis_ids, alias, table ):
          #print 'NOOOOOOOO!'
          varid = cmor.variable(var,d.units,axis_ids)
          
-     elif alias and var in ['gfdl-c03a', 'psl']:
+     elif alias in ['gfdl-c03a']and var in ['psl']:
          d.units = DefaultUnits
          uniMsg = 'Forced units - Special case'
          print 'Forced units - Special case'
