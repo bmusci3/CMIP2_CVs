@@ -7137,10 +7137,10 @@
     },
     "version_metadata":{
         "author":"musci2 <musci2@llnl.gov>",
-        "creation_date":"Mon Aug 7 17:54:16 2017 -0700",
+        "creation_date":"Mon Aug 7 17:54:31 2017 -0700",
         "institution_id":"PCMDI",
-        "latest_tag_point":"3.2.3 (184; g33840a9)",
+        "latest_tag_point":"3.2.3 (193; ge9e0175)",
         "note":"CreateCMIP2 source_id json file",
-        "previous_commit":"073f315060dc62746caae2679a8a9838a3705231"
+        "previous_commit":"678c137ad5e53de7f0300bc6fb3ace1a8697afa5"
     }
 }
